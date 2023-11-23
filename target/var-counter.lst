@@ -1,0 +1,151 @@
+
+; 64tass Turbo Assembler Macro V1.53.1515 listing file
+; 64tass -a -l ./target/var-counter.lbl -L ./target/var-counter.lst -o ./target/var-counter ./src/var-counter.asm
+; Wed Nov 22 20:41:21 2023
+
+;Offset	;Hex		;Monitor	;Source
+
+;******  Processing input file: ./src/var-counter.asm
+
+=$fb					vartab2ptr = $fb
+.c000	78		sei		    sei
+.c001	a9 a0		lda #$a0	    lda #$a0
+.c003					loop0:
+.c003	85 03		sta $03		    sta $03
+.c005	a0 00		ldy #$00	    ldy #$00
+.c007	84 02		sty $02		    sty $02
+.c009					loop1:
+.c009	b1 02		lda ($02),y	    lda ($02),Y
+.c00b	91 02		sta ($02),y	    sta ($02),Y
+.c00d	88		dey		    dey
+.c00e	d0 f9		bne $c009	    bne loop1
+.c010	e6 03		inc $03		    inc $03
+.c012	a5 03		lda $03		    lda $03
+.c014	f0 08		beq $c01e	    beq ahead
+.c016	c9 c0		cmp #$c0	    cmp #$c0
+.c018	d0 ef		bne $c009	    bne loop1
+.c01a	a9 e0		lda #$e0	    lda #$e0
+.c01c	d0 e5		bne $c003	    bne loop0
+.c01e					ahead:
+.c01e					do_patch:
+.c01e	a9 4c		lda #$4c	    lda #$4c            ; replaces:
+.c020	8d db b0	sta $b0db	    sta $b0db           ; $B0DB  STX $46
+.c023	a9 00		lda #$00	    lda #$00            ; $B0DD  SEC
+.c025	8d dc b0	sta $b0dc	    sta $b0dc
+.c028	a9 c1		lda #$c1	    lda #$C1            ; ...with
+.c02a	8d dd b0	sta $b0dd	    sta $b0dd           ; JMP $C100
+.c02d	a9 36		lda #$36	    LDA #$36            ; disable basic rom
+.c02f	85 01		sta $01		    STA $01
+.c031	58		cli		    CLI                 ; Enable interrupts
+.c032	a9 00		lda #$00	    lda #$00            ; empty the vart2table
+.c034	8d 00 c2	sta $c200	    sta $c200
+.c037	60		rts		    RTS                 ; Return from subroutine
+.c100	86 46		stx $46		    stx $46             ; do normally executed code
+.c102	38		sec		    sec
+.c103	08		php		    php                 ; save registers on stack
+.c104	48		pha		    pha
+.c105	8a		txa		    txa
+.c106	48		pha		    pha
+.c107	98		tya		    tya
+.c108	48		pha		    pha
+.c109	a9 00		lda #$00	    lda #$00            ; set and clear our temp variable info block
+.c10b	85 fb		sta $fb		    sta vartab2ptr
+.c10d	a9 c2		lda #$c2	    lda #$C2
+.c10f	85 fc		sta $fc		    sta vartab2ptr+1
+.c111	a0 00		ldy #$00	    ldy #$00
+.c113					searchloop:
+.c113	b1 fb		lda ($fb),y	    lda (vartab2ptr),y  ; get 1st value in vartab2
+.c115	f0 26		beq $c13d	    beq notfound        ; if zero, no more variables
+.c117	c5 45		cmp $45		    cmp $45             ; compare it with the first character in variable name
+.c119	d0 1b		bne $c136	    bne nextvar
+.c11b	c8		iny		    iny
+.c11c	b1 fb		lda ($fb),y	    lda (vartab2ptr), y ; get 2nd value in vartab2
+.c11e	c5 46		cmp $46		    cmp $46             ; compare it to second character in variable name
+.c120	d0 15		bne $c137	    bne nextvar+1
+.c122	c8		iny		    iny
+.c123	c8		iny		    iny                 ; skip ahead twice since count is 16 bit value
+.c124	18		clc		    clc
+.c125	b1 fb		lda ($fb),y	    lda (vartab2ptr),y  ; get the lo-byte counter for this variable
+.c127	69 01		adc #$01	    adc #$01            ; add 1 to it
+.c129	91 fb		sta ($fb),y	    sta (vartab2ptr),y  ; save it back
+.c12b	88		dey		    dey                 ; back up the counter to the hi byte
+.c12c	b1 fb		lda ($fb),y	    lda (vartab2ptr),y  ; get the hi-byte counter for this variable
+.c12e	69 00		adc #$00	    adc #$00            ; add any carry
+.c130	91 fb		sta ($fb),y	    sta (vartab2ptr),y
+.c132	c8		iny		    iny
+.c133	4c 55 c1	jmp $c155	    jmp done            ; finished, exit
+.c136					nextvar:
+.c136	c8		iny		    iny
+.c137	c8		iny		    iny
+.c138	c8		iny		    iny
+.c139	c8		iny		    iny
+.c13a	4c 13 c1	jmp $c113	    jmp searchloop
+.c13d					notfound:
+.c13d	a5 45		lda $45		    lda $45
+.c13f	91 fb		sta ($fb),y	    sta (vartab2ptr),y
+.c141	c8		iny		    iny
+.c142	a5 46		lda $46		    lda $46
+.c144	91 fb		sta ($fb),y	    sta (vartab2ptr),y
+.c146	c8		iny		    iny
+.c147	a9 00		lda #$00	    lda #$00
+.c149	91 fb		sta ($fb),y	    sta (vartab2ptr),y  ; save the new variable, with value of 1 (0=low byte)
+.c14b	c8		iny		    iny
+.c14c	a9 01		lda #$01	    lda #$01
+.c14e	91 fb		sta ($fb),y	    sta (vartab2ptr),y  ; save the new variable, with value of 1
+.c150	c8		iny		    iny
+.c151	a9 00		lda #$00	    lda #$00
+.c153	91 fb		sta ($fb),y	    sta (vartab2ptr),y  ; zero indicates end
+.c155					done:
+.c155	68		pla		    pla
+.c156	a8		tay		    tay
+.c157	68		pla		    pla
+.c158	aa		tax		    tax
+.c159	68		pla		    pla
+.c15a	28		plp		    plp
+.c15b	4c de b0	jmp $b0de	    jmp $b0de           ; jump back to normal code
+.c15e					print_counts:
+.c15e	a9 00		lda #$00	    lda #$00
+.c160	85 fb		sta $fb		    sta vartab2ptr
+.c162	a9 c2		lda #$c2	    lda #$C2
+.c164	85 fc		sta $fc		    sta vartab2ptr+1
+.c166	a0 00		ldy #$00	    ldy #$00
+.c168					printmsg_loop:
+.c168	b9 a3 c1	lda $c1a3,y	    lda msg, y
+.c16b	f0 07		beq $c174	    beq +
+.c16d	20 d2 ff	jsr $ffd2	    jsr $ffd2
+.c170	c8		iny		    iny
+.c171	4c 68 c1	jmp $c168	    jmp printmsg_loop
+.c174					+
+.c174	a0 00		ldy #$00	    ldy #$00
+.c176					printvarloop:
+.c176	b1 fb		lda ($fb),y	    lda (vartab2ptr),y  ; get 1st value in vartab2
+.c178	f0 28		beq $c1a2	    beq print_done      ; if zero, no more variables
+.c17a	20 d2 ff	jsr $ffd2	    jsr $ffd2
+.c17d	c8		iny		    iny
+.c17e	b1 fb		lda ($fb),y	    lda (vartab2ptr), y ; get 2nd value in vartab2
+.c180	f0 03		beq $c185	    beq +
+.c182	20 d2 ff	jsr $ffd2	    jsr $ffd2
+.c185	a9 3d		lda #$3d	+   lda #'='
+.c187	20 d2 ff	jsr $ffd2	    jsr $ffd2
+.c18a	c8		iny		    iny
+.c18b	c8		iny		    iny
+.c18c	98		tya		    tya                 ; stash the counter (bdcd may trash the Y reg)
+.c18d	48		pha		    pha
+.c18e	b1 fb		lda ($fb),y	    lda (vartab2ptr),y  ; get the counter for this variable
+.c190	aa		tax		    tax                 ; transfer low byte to X
+.c191	88		dey		    dey                 ; back up
+.c192	b1 fb		lda ($fb),y	    lda (vartab2ptr),Y  ; get high byte in A
+.c194	20 cd bd	jsr $bdcd	    jsr $bdcd           ; print the decimal value of X,A
+.c197	a9 0d		lda #$0d	    lda #$0d
+.c199	20 d2 ff	jsr $ffd2	    jsr $ffd2
+.c19c	68		pla		    pla                 ; get the counter back
+.c19d	a8		tay		    tay
+.c19e	c8		iny		    iny                 ; increase counter for next variable
+.c19f	4c 76 c1	jmp $c176	    jmp printvarloop
+.c1a2					print_done:
+.c1a2	60		rts		    rts
+.c1a3					msg:
+>c1a3	56 41 52 49 41 42 4c 45		.text "variable accesses:", $0d, $00
+>c1ab	20 41 43 43 45 53 53 45 53 3a 0d 00
+
+;******  End of listing

@@ -1,0 +1,14 @@
+loop1		= $c009
+loop0		= $c003
+do_patch	= $c01e
+vartab2ptr	= $fb
+print_counts	= $c15e
+print_done	= $c1a2
+printmsg_loop	= $c168
+searchloop	= $c113
+nextvar		= $c136
+ahead		= $c01e
+done		= $c155
+printvarloop	= $c176
+notfound	= $c13d
+msg		= $c1a3
